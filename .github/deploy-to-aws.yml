@@ -1,0 +1,27 @@
+name: Deploy to AWS via Github action
+on: 
+  push: 
+    branches: 
+      - 'master'
+      - '**'   
+
+permissions:
+  id-token: write 
+  contents: read
+
+jobs: 
+  TestWithAWS:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Get AWS Account ID
+        id: get-account-id
+        run: |
+          echo "Getting AWS Account ID"
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=${ACCOUNT_ID}" >> $GITHUB_ENV
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: 'arn:aws:iam::${{ env.account_id }}:role/github-actions-deployment-role'
